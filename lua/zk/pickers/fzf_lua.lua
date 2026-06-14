@@ -32,6 +32,17 @@ M.note_picker_list_api_selection = { "title", "absPath", "path" }
 function M.show_note_picker(notes, options, cb)
   options = options or {}
   local notes_by_path = {}
+
+  -- =========================================================================
+  -- TU AJUSTE PERSONAL: Ordenar notas alfabéticamente por título real
+  -- =========================================================================
+  table.sort(notes, function(a, b)
+    local title_a = (a.title or a.path or ""):lower()
+    local title_b = (b.title or b.path or ""):lower()
+    return title_a < title_b
+  end)
+  -- =========================================================================
+
   local fzf_opts = vim.tbl_deep_extend("force", {
     prompt = options.title .. " > ",
     previewer = fzf_lua_previewer,
@@ -40,7 +51,7 @@ function M.show_note_picker(notes, options, cb)
       ["--tiebreak"] = "index",
       ["--with-nth"] = 2,
       ["--tabstop"] = 4,
-      ["--header"] = ansi_codes.blue("CTRL-E: create a note with the query as title"),
+      ["--header"] = false,
       ["--multi"] = options.multi_select,
     },
     -- we rely on `fzf-lua` to open notes in any other case than the default (pressing enter)

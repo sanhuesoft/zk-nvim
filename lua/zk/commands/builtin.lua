@@ -143,3 +143,9 @@ commands.add("ZkTags", function(options)
     zk.edit(options, { title = "Zk Notes for tag(s) " .. vim.inspect(tags) })
   end)
 end)
+
+---Opens a random note, excluding notes in the given directories.
+---Pass `excludeDirs = { "templates", "daily" }` to ignore those folders.
+commands.add("ZkRandom", function(options)
+  zk.random(options)
+end)

@@ -188,6 +188,13 @@ see what they can do, and learn as you go.
 - `:ZkLinks [{options}]`\
   Opens a notes picker showing outbound links of the current buffer.
 
+- `:ZkRandom [{options}]`\
+  Opens a random note directly (no picker). Use `excludeDirs` to skip
+  specific folder trees:
+  ```vim
+  :ZkRandom { excludeDirs = { "templates", "daily" } }
+  ```
+
 ### Linking
 
 [Options (ZkList)](https://zk-org.github.io/zk/tips/editors-integration.html#zk-list)

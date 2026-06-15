@@ -141,4 +141,52 @@ function M.edit(options, picker_options)
   end)
 end
 
+---Opens a random note, skipping notes inside the given directories.
+--
+---@param options? table additional options accepted by zk list (e.g. `excludeDirs`, `notebook_path`).
+---                       Pass `excludeDirs = { "templates", "daily" }` to ignore those folders.
+function M.random(options)
+  options = options or {}
+
+  -- Build the list options: request only the path field to keep the payload small.
+  local list_options = vim.tbl_extend("force", { select = { "path", "absPath" } }, options)
+  -- Remove the custom key so it is not forwarded to the LSP server.
+  local exclude_dirs = list_options.excludeDirs
+  list_options.excludeDirs = nil
+
+  api.list(list_options.notebook_path, list_options, function(err, notes)
+    assert(not err, tostring(err))
+    assert(notes and #notes > 0, "ZkRandom: no notes found in this notebook")
+
+    -- Filter out notes whose absPath starts with any of the excluded directories.
+    if exclude_dirs and #exclude_dirs > 0 then
+      local notebook_path = list_options.notebook_path or util.resolve_notebook_path(0)
+      local root = util.notebook_root(notebook_path) or notebook_path
+
+      notes = vim.tbl_filter(function(note)
+        local abs = note.absPath or note.path or ""
+        for _, dir in ipairs(exclude_dirs) do
+          -- Build the absolute prefix, handling both absolute and relative dirs.
+          local prefix = vim.fn.fnamemodify(dir, ":p") == dir and dir
+            or (root .. "/" .. dir)
+          -- Normalise trailing slash.
+          if not vim.endswith(prefix, "/") then
+            prefix = prefix .. "/"
+          end
+          if vim.startswith(abs, prefix) then
+            return false
+          end
+        end
+        return true
+      end, notes)
+    end
+
+    assert(#notes > 0, "ZkRandom: all notes were filtered out by excludeDirs")
+
+    math.randomseed(os.time())
+    local pick = notes[math.random(#notes)]
+    vim.cmd("edit " .. vim.fn.fnameescape(pick.absPath or pick.path))
+  end)
+end
+
 return M
